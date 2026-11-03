@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>دفتر ثبت مسافر و خرج</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef2f7; --card:#ffffff; --line:#e2e8f0; --text:#0f172a; --muted:#64748b;
+    --primary:#2563eb; --green:#16a34a; --red:#dc2626; --amber:#f59e0b; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{
+    margin:0; padding:0; 
+    width: 100%; max-width: 100vw; overflow-x: hidden;
+    font-family:'Vazirmatn',Tahoma,sans-serif; background:var(--bg); color:var(--text);
+    font-size:14px; line-height:1.6;
+  }
+  [hidden]{display:none !important}
+  
+  .app{
+    display: flex; flex-direction: column; gap: 12px; padding: 10px; width: 100%; max-width: 1400px; margin: 0 auto; align-items: stretch;
+  }
+  
+  @media(min-width: 992px){
+    .app{ display: grid; grid-template-columns: 320px 1fr; padding: 16px; gap: 16px; align-items: start; }
+    .sidebar{ position: sticky; top: 16px; max-height: calc(100vh - 32px); }
+  }
+
+  .sidebar{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:0 1px 3px rgba(15,23,42,.08);
+    display:flex;flex-direction:column;gap:10px;width:100%;}
+  .brand{font-weight:700;font-size:17px; text-align: center;}
+  .side-title{margin:6px 0 0;font-size:13px;color:var(--muted);font-weight:600}
+  .day-list{overflow-y:auto;flex:1;min-height:60px; max-height: 250px;}
+  @media(min-width: 992px){ .day-list{max-height: none;} }
+  
+  .day-item{display:block;width:100%;text-align:right;border:1px solid var(--line);background:#f8fafc;
+    border-radius:10px;padding:9px 11px;margin-bottom:8px;cursor:pointer;font-family:inherit;font-size:13px;
+    transition:.15s;color:inherit}
+  .day-item:hover{background:#eef4ff;border-color:#c7d7fe}
+  .day-item.active{background:#e0edff;border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
+  .di-date{font-weight:700;margin-bottom:2px}
+  .di-sub{color:var(--muted);font-size:11.5px;display:flex;justify-content:space-between;gap:8px}
+  .grand{border-top:1px dashed var(--line);padding-top:10px;font-size:13px}
+  .g-row{display:flex;justify-content:space-between;padding:3px 0}
+  .g-row.total{border-top:1px solid var(--line);margin-top:4px;padding-top:7px;font-weight:700}
+  .side-actions{display:flex;gap:6px}
+  .side-actions .btn{flex:1}
+
+  .main{display:flex;flex-direction:column;gap:12px;width:100%; min-width:0;}
+  .card{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:0 1px 3px rgba(15,23,42,.08); width:100%;}
+  @media(min-width: 992px){ .card{padding: 16px;} }
+  
+  .muted{color:var(--muted)}
+  .green{color:var(--green)}
+  .red{color:var(--red)}
+  .num{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  .seg{display:flex;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:14px;gap:4px; width: 100%;}
+  .seg-btn{border:0;background:transparent;padding:8px 18px;border-radius:8px;cursor:pointer;flex:1;
+    font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);transition:.15s; text-align:center;}
+  .seg-btn.active{background:#fff;color:var(--primary);box-shadow:0 1px 2px rgba(15,23,42,.12)}
+  
+  .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:10px;}
+  .field{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);font-weight:600}
+  .field.wide{grid-column:1/-1}
+  
+  .field input,.field select{
+    border:1px solid var(--line);border-radius:9px;padding:10px;font-family:inherit;
+    font-size:14px;color:var(--text);background:#fbfdff;outline:none;transition:.15s;
+    width: 100%; max-width: 100%;
+  }
+  .field input:focus,.field select:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  
+  .btn{border:0;border-radius:10px;padding:12px 20px;font-family:inherit;font-size:14px;font-weight:700;
+    cursor:pointer;transition:.15s; text-align: center;}
+  .btn.primary{background:var(--primary);color:#fff;margin-top:14px; width: 100%; font-size: 15px;}
+  .btn.primary:hover{background:#1d4ed8}
+  .btn.primary:disabled{background:#93b4f7;cursor:wait}
+  .btn.ghost{background:#f1f5f9;color:var(--text)}
+  .btn.ghost:hover{background:#e2e8f0}
+  .btn.full{width:100%}
+  .btn.small{padding:6px 12px;font-size:12px;border-radius:8px;margin-top:6px}
+
+  .date-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center; width: 100%;}
+  .date-row select{width:auto;flex:1;min-width:75px; padding: 10px 5px; font-size: 13px;}
+  .date-row input[type=date]{flex:2;min-width:120px; padding: 10px 5px; font-size: 13px;}
+  .hint{font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+
+  .geo-row{display:flex;gap:6px;align-items:stretch; width: 100%;}
+  .geo-row input{flex:1;min-width:0}
+  .geo-row .btn{white-space:nowrap;margin:0;padding:0 15px;font-size:18px;border:1px solid var(--line);
+    background:#f8fafc;color:var(--text);border-radius:9px;display:flex;align-items:center;justify-content:center;}
+  .geo-row .btn:hover{background:#eef4ff;border-color:#c7d7fe;color:var(--primary)}
+  .geo-status{font-size:11.5px;font-weight:600;color:var(--primary);min-height:16px;margin-top:8px}
+  .geo-status.err{color:var(--red)}
+
+  .day-head{display:flex;flex-direction: column;gap:10px; border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px}
+  @media(min-width: 600px){ .day-head{flex-direction: row; justify-content: space-between; align-items: flex-start;} }
+  
+  .dh-title h2{margin:0 0 2px;font-size:16px}
+  @media(min-width: 600px){ .dh-title h2{font-size:18px;} }
+  
+  .stats{display:grid;grid-template-columns: repeat(2, 1fr);gap:8px; width: 100%;}
+  @media(min-width: 600px){ .stats{display: flex; width: auto; flex-wrap: wrap;} }
+  
+  .stat{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:6px 10px;
+    display:flex;flex-direction:column;align-items:center;}
+  @media(min-width: 600px){ .stat{min-width: 85px;} }
+  
+  .stat span{font-size:11px;color:var(--muted);white-space:nowrap;}
+  .stat b{font-size:14px;font-variant-numeric:tabular-nums}
+  .stat.in b{color:var(--green)} .stat.out b{color:var(--red)}
+
+  .section{margin-bottom:18px}
+  .sec-title{margin:0 0 8px;font-size:14px}
+  .tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:11px; -webkit-overflow-scrolling: touch; max-width: 100%;}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:650px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
+  th{color:var(--muted);font-weight:600;font-size:12px;background:#f8fafc;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#fafcff}
+  tfoot td{font-weight:700;background:#f1f5f9;border-top:2px solid var(--line);border-bottom:0}
+  .idx{color:var(--muted);font-size:12px;width:34px}
+  .actions{width:78px;white-space:nowrap}
+  .icon-btn{border:1px solid var(--line);background:#fff;border-radius:7px;width:29px;height:29px;
+    cursor:pointer;font-size:13px;line-height:1;color:var(--muted);transition:.15s;margin-inline-start:3px}
+  .icon-btn:hover{background:#eef4ff;color:var(--primary);border-color:#c7d7fe}
+  .icon-btn.danger:hover{background:#fee2e2;color:var(--red);border-color:#fecaca}
+  .empty{color:var(--muted);font-size:13px;background:#f8fafc;border:1px dashed var(--line);
+    border-radius:10px;padding:14px;text-align:center;margin:0}
+  .empty.small{padding:10px;font-size:12px}
+
+  .route{min-width:190px}
+  .rline{display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+  .rar{color:var(--primary);font-weight:700}
+  .rdist{font-size:11px;color:var(--muted);margin-top:2px}
+
+  .day-summary{display:grid;grid-template-columns: repeat(2, 1fr);gap:10px;background:#f8fafc;border:1px solid var(--line);
+    border-radius:11px;padding:12px 14px}
+  @media(min-width: 600px){ .day-summary{display: flex; flex-wrap: wrap;} .day-summary > div{min-width: 130px;} }
+  .day-summary > div{display:flex;flex-direction:column;}
+  .day-summary span{font-size:11.5px;color:var(--muted)}
+  .day-summary b{font-size:15px;font-variant-numeric:tabular-nums}
+
+  .cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .cal-title{font-weight:700;font-size:15px}
+  .cal-title small{display:block;font-size:11px;color:var(--muted);font-weight:400}
+  .cal-nav{display:flex;gap:6px}
+  .cal-nav button{border:1px solid var(--line);background:#f8fafc;border-radius:9px;width:32px;height:32px;
+    cursor:pointer;font-size:15px;color:var(--text);font-family:inherit;transition:.15s; display:flex; align-items: center; justify-content: center;}
+  .cal-nav button:hover{background:#eef4ff;color:var(--primary);border-color:#c7d7fe}
+  
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px; width: 100%;}
+  .cal-wd{text-align:center;font-size:11px;color:var(--muted);font-weight:700;padding-bottom:2px}
+  
+  .cal-cell{
+    position:relative; border:1px solid var(--line); background:#f8fafc; border-radius:8px;
+    cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    font-family:inherit; font-size:12px; color:var(--text); transition:.15s; padding:4px 2px;
+    min-height: 42px; height: auto;
+  }
+  @media(min-width: 600px){ .cal-cell{min-height: 48px; font-size: 13px;} }
+  
+  .cal-cell:hover{background:#eef4ff;border-color:#c7d7fe}
+  .cal-cell.blank{background:transparent;border:0;cursor:default}
+  .cal-cell.today{box-shadow:inset 0 0 0 1.5px var(--amber)}
+  .cal-cell.sel{background:#e0edff;border-color:var(--primary);box-shadow:inset 0 0 0 1.5px var(--primary)}
+  .cal-cell.has{font-weight:700}
+  .cal-dots{display:flex;gap:3px;height:6px}
+  .dot{width:5px;height:5px;border-radius:50%}
+  .dot.g{background:var(--green)} .dot.r{background:var(--red)}
+  .cal-legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+  .cal-legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-inline-end:4px}
+  .cal-month-sum{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:12.5px}
+  .cal-month-sum b{font-variant-numeric:tabular-nums}
+
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;
+    justify-content:center;padding:16px;z-index:50;backdrop-filter:blur(2px)}
+  .modal.hidden{display:none}
+  .modal-box{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:440px;
+    box-shadow:0 20px 40px rgba(15,23,42,.25);max-height:92vh;overflow:auto}
+  .modal-box h3{margin:0 0 14px;font-size:16px}
+  .modal-body{display:flex;flex-direction:column;gap:11px}
+  .modal-body label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted);font-weight:600}
+  .modal-body input{border:1px solid var(--line);border-radius:9px;padding:10px;font-family:inherit;
+    font-size:14px;color:var(--text);outline:none;width:100%}
+  .modal-body input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  .modal-actions{display:flex;gap:8px;margin-top:18px}
+  .modal-actions .btn{flex:1;margin-top:0}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">🚕 دفتر روزانه</div>
+    <button id="btnToday" class="btn ghost full">رفتن به امروز</button>
+    <div class="side-title">روزهای ثبت‌شده</div>
+    <div id="dayList" class="day-list"></div>
+    <div id="grand" class="grand"></div>
+    <div class="side-actions">
+      <button id="btnExport" class="btn ghost small">⬇️ پشتیبان</button>
+      <button id="btnImport" class="btn ghost small">⬆️ بازیابی</button>
+      <input type="file" id="fileImport" accept="application/json" hidden>
+    </div>
+  </aside>
+
+  <main class="main">
+    <section class="card">
+      <div class="seg">
+        <button class="seg-btn active" data-type="p">مسافر</button>
+        <button class="seg-btn" data-type="e">خرج</button>
+      </div>
+      <form id="entryForm" autocomplete="off">
+        <div class="grid">
+          <label class="field"><span id="lblName">نام مسافر</span>
+            <input id="fName" required placeholder="مثلا: علی رضایی">
+          </label>
+
+          <label class="field"><span>مبلغ (تومان)</span>
+            <input id="fAmount" inputmode="numeric" required placeholder="0">
+          </label>
+
+          <label class="field"><span>ساعت</span>
+            <input id="fTime" type="time" required>
+          </label>
+
+          <label class="field">
+            <span>طول مسیر (کیلومتر)</span>
+            <div class="geo-row">
+              <input id="fDist" inputmode="decimal" placeholder="0.0" class="trip-field">
+              <button type="button" id="btnDist" class="btn trip-field" title="محاسبه فاصله">↻</button>
+            </div>
+          </label>
+
+          <div class="field wide">
+            <span>تاریخ (شمسی و میلادی)</span>
+            <div class="date-row">
+              <select id="jY" aria-label="سال شمسی"></select>
+              <select id="jM" aria-label="ماه شمسی"></select>
+              <select id="jD" aria-label="روز شمسی"></select>
+              <input id="fDate" type="date" aria-label="تاریخ میلادی">
+            </div>
+          </div>
+
+          <label class="field wide trip-field"><span>مبدا</span>
+            <div class="geo-row">
+              <input id="fFrom" placeholder="آدرس مبدا یا موقعیت GPS">
+              <button type="button" id="btnFrom" class="btn" title="ثبت موقعیت فعلی به‌عنوان مبدا">📍</button>
+            </div>
+          </label>
+
+          <label class="field wide trip-field"><span>مقصد</span>
+            <div class="geo-row">
+              <input id="fTo" placeholder="آدرس مقصد یا موقعیت GPS">
+              <button type="button" id="btnTo" class="btn" title="ثبت موقعیت فعلی به‌عنوان مقصد">📍</button>
+            </div>
+          </label>
+
+          <label class="field wide"><span>توضیح (اختیاری)</span>
+            <input id="fNote" placeholder="مبدا، مقصد، توضیح خرج و ...">
+          </label>
+        </div>
+
+        <div id="geoStatus" class="geo-status"></div>
+        <button class="btn primary" type="submit" id="submitBtn">ثبت مسافر</button>
+      </form>
+    </section>
+
+    <section class="card" id="calendarCard"></section>
+    <section class="card" id="dayCard"></section>
+  </main>
+</div>
+
+<div class="modal hidden" id="modal">
+  <div class="modal-box">
+    <h3 id="modalTitle">ویرایش</h3>
+    <div id="modalBody" class="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn primary" id="modalSave">ذخیره</button>
+      <button class="btn ghost" id="modalCancel">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const p2 = n => String(n).padStart(2, '0');
+const FA = '۰۱۲۳۴۵۶۷۸۹';
+const toFa = n => String(n).replace(/\d/g, d => FA[+d]);
+const sum = (arr, k = 'amount') => arr.reduce((s, x) => s + Number(x[k] || 0), 0);
+const fmt = n => toFa(Number(n || 0).toLocaleString('en-US').replace(/,/g, '٬'));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const shortLabel = (s, n = 26) => { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; };
+const parseAmount = v => Number(String(v ?? '').replace(/[^\d]/g, '')) || 0;
+const nowTime = () => { const d = new Date(); return `${p2(d.getHours())}:${p2(d.getMinutes())}`; };
+
+const div = (a, b) => ~~(a / b), mod = (a, b) => a - ~~(a / b) * b;
+const BREAKS = [-61,9,38,199,426,686,756,818,1111,1181,1210,1635,2060,2097,2192,2262,2324,2394,2456,3178];
+
+function jalCal(jy, withoutLeap){
+  const bl = BREAKS.length, gy = jy + 621;
+  let leapJ = -14, jp = BREAKS[0], jump = 0;
+  for (let i = 1; i < bl; i++){
+    const jm = BREAKS[i];
+    jump = jm - jp;
+    if (jy < jm) break;
+    leapJ += div(jump, 33) * 8 + div(mod(jump, 33), 4);
+    jp = jm;
+  }
+  let n = jy - jp;
+  leapJ += div(n, 33) * 8 + div(mod(n, 33) + 3, 4);
+  if (mod(jump, 33) === 4 && jump - n === 4) leapJ += 1;
+  const leapG = div(gy, 4) - div((div(gy, 100) + 1) * 3, 4) - 150;
+  const march = 20 + leapJ - leapG;
+  let leap = 0;
+  if (!withoutLeap){
+    if (jump - n < 6) n = n - jump + div(jump + 4, 33) * 33;
+    leap = mod(mod(n + 1, 33) - 1, 4);
+    if (leap === -1) leap = 4;
+  }
+  return { leap, gy, march };
+}
+function g2d(gy, gm, gd){
+  let d = div((gy + div(gm - 8, 6) + 100100) * 1461, 4) + div(153 * mod(gm + 9, 12) + 2, 5) + gd - 34840408;
+  d = d - div(div(gy + 100100 + div(gm - 8, 6), 100) * 3, 4) + 752;
+  return d;
+}
+function d2g(jdn){
+  let j = 4 * jdn + 139361631;
+  j = j + div(div(4 * jdn + 183187720, 146097) * 3, 4) * 4 - 3908;
+  const i = div(mod(j, 1461), 4) * 5 + 308;
+  const gd = div(mod(i, 153), 5) + 1;
+  const gm = mod(div(i, 153), 12) + 1;
+  const gy = div(j, 1461) - 100100 + div(8 - gm, 6);
+  return { gy, gm, gd };
+}
+function j2d(jy, jm, jd){
+  const r = jalCal(jy, true);
+  return g2d(r.gy, 3, r.march) + (jm - 1) * 31 - div(jm, 7) * (jm - 7) + jd - 1;
+}
+function d2j(jdn){
+  const gy = d2g(jdn).gy;
+  let jy = gy - 621;
+  const r = jalCal(jy, false);
+  const jdn1f = g2d(gy, 3, r.march);
+  let k = jdn - jdn1f, jm, jd;
+  if (k >= 0){
+    if (k <= 185){ jm = 1 + div(k, 31); jd = mod(k, 31) + 1; return { jy, jm, jd }; }
+    k -= 186;
+  } else {
+    jy -= 1; k += 179;
+    if (r.leap === 1) k += 1;
+  }
+  jm = 7 + div(k, 30);
+  jd = mod(k, 30) + 1;
+  return { jy, jm, jd };
+}
+const toJalali    = (gy, gm, gd) => d2j(g2d(gy, gm, gd));
+const toGregorian = (jy, jm, jd) => d2g(j2d(jy, jm, jd));
+const jLeap       = jy => jalCal(jy).leap === 0;
+const jMonthLen   = (jy, jm) => jm <= 6 ? 31 : (jm <= 11 ? 30 : (jLeap(jy) ? 30 : 29));
+
+const J_MONTHS = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+const J_WEEK   = ['ش','ی','د','س','چ','پ','ج'];
+
+const toISO = (gy, gm, gd) => `${gy}-${p2(gm)}-${p2(gd)}`;
+function todayISO(){ const d = new Date(); return toISO(d.getFullYear(), d.getMonth() + 1, d.getDate()); }
+function isoToJ(iso){ const [y, m, d] = iso.split('-').map(Number); return toJalali(y, m, d); }
+function jToISO(jy, jm, jd){ const g = toGregorian(jy, jm, jd); return toISO(g.gy, g.gm, g.gd); }
+
+function faFull(iso){
+  const j = isoToJ(iso);
+  const d = new Date(iso + 'T00:00:00');
+  const wd = isNaN(d) ? '' : d.toLocaleDateString('fa-IR', { weekday: 'long' });
+  return `${wd} ${toFa(j.jd)} ${J_MONTHS[j.jm - 1]} ${toFa(j.jy)}`;
+}
+function faShort(iso){
+  const j = isoToJ(iso);
+  const d = new Date(iso + 'T00:00:00');
+  const wd = isNaN(d) ? '' : d.toLocaleDateString('fa-IR', { weekday: 'long' });
+  return `${wd} ${toFa(j.jd)} ${J_MONTHS[j.jm - 1]}`;
+}
+function faGreg(iso){
+  const d = new Date(iso + 'T00:00:00');
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' });
+}
+
+const KEY = 'passenger_app_v2';
+let data = { days: {}, settings: { autoDest: true, useRouting: true } };
+
+function load(){
+  try {
+    let raw = localStorage.getItem(KEY);
+    if (!raw) raw = localStorage.getItem('passenger_app_v1');
+    if (raw) data = JSON.parse(raw);
+  } catch (e) { data = null; }
+  if (!data || typeof data !== 'object') data = {};
+  if (!data.days) data.days = {};
+  if (!data.settings) data.settings = {};
+  if (data.settings.autoDest === undefined) data.settings.autoDest = true;
+  if (data.settings.useRouting === undefined) data.settings.useRouting = true;
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { console.warn(e); } }
+
+const dayOf = (iso, create = false) => {
+  if (!data.days[iso]){ if (!create) return null; data.days[iso] = { passengers: [], expenses: [] }; }
+  const d = data.days[iso];
+  if (!d.passengers) d.passengers = [];
+  if (!d.expenses) d.expenses = [];
+  return d;
+};
+function cleanupDay(iso){
+  const d = data.days[iso];
+  if (d && d.passengers.length === 0 && d.expenses.length === 0) delete data.days[iso];
+}
+
+let currentDate = todayISO();
+let calYear, calMonth;
+let formType = 'p';
+let editing = null;
+let tripFrom = null, tripTo = null;
+let distToken = 0;
+
+function setGeoStatus(txt, isErr){
+  const el = $('#geoStatus');
+  el.textContent = txt || '';
+  el.classList.toggle('err', !!isErr);
+}
+function getPosition(){
+  return new Promise((res, rej) => {
+    if (!navigator.geolocation) return rej(new Error('مرورگر از موقعیت‌یاب پشتیبانی نمی‌کند'));
+    navigator.geolocation.getCurrentPosition(res, rej, {
+      enableHighAccuracy: true, timeout: 12000, maximumAge: 60000
+    });
+  });
+}
+function fetchT(url, ms){
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(t));
+}
+async function reverseGeocode(lat, lng){
+  try {
+    const u = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=fa`;
+    const r = await fetchT(u, 8000);
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (!j || !j.display_name) return null;
+    const parts = j.display_name.split(/[,،]/).map(s => s.trim()).filter(Boolean);
+    return parts.slice(0, 3).join('، ');
+  } catch (e) { return null; }
+}
+
+// تبدیل متن آدرس به مختصات
+async function geocodeAddress(address) {
+  try {
+    const u = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(address)}&limit=1`;
+    const r = await fetchT(u, 8000);
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (j && j.length > 0) {
+      return { lat: Number(j[0].lat), lng: Number(j[0].lon), label: address };
+    }
+    return null;
+  } catch (e) { return null; }
+}
+
+function haversineKm(a, b){
+  const R = 6371, rad = x => x * Math.PI / 180;
+  const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+async function osrmDistance(a, b){
+  try {
+    const u = `https://router.project-osrm.org/route/v1/driving/${a.lng},${a.lat};${b.lng},${b.lat}?overview=false`;
+    const r = await fetchT(u, 6000);
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (j.code === 'Ok' && j.routes && j.routes[0]) return j.routes[0].distance / 1000;
+    return null;
+  } catch (e) { return null; }
+}
+
+async function captureLocation(kind, silent){
+  const input = kind === 'from' ? $('#fFrom') : $('#fTo');
+  try {
+    setGeoStatus('در حال دریافت موقعیت…');
+    const pos = await getPosition();
+    const obj = { lat: pos.coords.latitude, lng: pos.coords.longitude, label: '' };
+    obj.label = `${obj.lat.toFixed(5)}, ${obj.lng.toFixed(5)}`;
+    if (kind === 'from') tripFrom = obj; else tripTo = obj;
+    input.value = obj.label;
+
+    setGeoStatus('موقعیت ثبت شد؛ در حال یافتن نشانی…');
+    const nm = await reverseGeocode(obj.lat, obj.lng);
+    if (nm){
+      obj.label = nm;
+      input.value = nm;
+      if (kind === 'from') tripFrom = obj; else tripTo = obj;
+    }
+    setGeoStatus('موقعیت ثبت شد ✓');
+    updateDistance();
+    return obj;
+  } catch (err) {
+    const msg = (err && err.code === 1) ? 'اجازه دسترسی به موقعیت داده نشد' : (err.message || 'خطای نامشخص');
+    if (!silent) setGeoStatus('دریافت موقعیت ممکن نشد: ' + msg, true);
+    else setGeoStatus('');
+    return null;
+  }
+}
+
+async function updateDistance(){
+  const el = $('#fDist');
+  if (!el) return;
+  
+  // اگر مبدا مختصات ندارد اما متن دارد، جستجو کن
+  if (!tripFrom && $('#fFrom').value.trim()) {
+    setGeoStatus('در حال یافتن مختصات مبدا از روی متن...');
+    const coords = await geocodeAddress($('#fFrom').value.trim());
+    if (coords) tripFrom = coords;
+    else { setGeoStatus('آدرس مبدا پیدا نشد! لطفا واضح‌تر بنویسید.', true); return; }
+  }
+
+  // اگر مقصد مختصات ندارد اما متن دارد، جستجو کن
+  if (!tripTo && $('#fTo').value.trim()) {
+    setGeoStatus('در حال یافتن مختصات مقصد از روی متن...');
+    const coords = await geocodeAddress($('#fTo').value.trim());
+    if (coords) tripTo = coords;
+    else { setGeoStatus('آدرس مقصد پیدا نشد! لطفا واضح‌تر بنویسید.', true); return; }
+  }
+
+  if (tripFrom && tripTo && tripFrom.lat != null && tripTo.lat != null){
+    setGeoStatus('در حال محاسبه مسافت...');
+    const my = ++distToken;
+    const line = haversineKm(tripFrom, tripTo);
+    el.value = line.toFixed(1);
+    if (data.settings.useRouting){
+      const road = await osrmDistance(tripFrom, tripTo);
+      if (my === distToken && road != null) el.value = road.toFixed(1);
+    }
+    setGeoStatus('مسافت محاسبه شد ✓');
+  } else {
+    setGeoStatus('برای محاسبه فاصله، ابتدا مبدا و مقصد را پر کنید.', true);
+  }
+}
+
+function bindAmount(input){
+  if (!input || input.dataset.bound) return;
+  input.dataset.bound = '1';
+  const format = () => {
+    const digits = input.value.replace(/[^\d]/g, '');
+    input.value = digits ? Number(digits).toLocaleString('en-US') : '';
+  };
+  input.addEventListener('input', format);
+  input.addEventListener('blur', format);
+  format();
+}
+
+function initDateSelects(){
+  const jyNow = isoToJ(todayISO()).jy;
+  let opts = '';
+  for (let y = jyNow - 30; y <= jyNow + 5; y++) opts += `<option value="${y}">${toFa(y)}</option>`;
+  $('#jY').innerHTML = opts;
+  $('#jM').innerHTML = J_MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+}
+function fillDayOptions(jy, jm, selected){
+  const len = jMonthLen(jy, jm);
+  const cur = Math.min(Number(selected) || 1, len);
+  $('#jD').innerHTML = Array.from({ length: len }, (_, i) => `<option value="${i + 1}">${toFa(i + 1)}</option>`).join('');
+  $('#jD').value = cur;
+}
+function setFormDate(iso){
+  if (!iso) return;
+  const j = isoToJ(iso);
+  if ([...$('#jY').options].some(o => +o.value === j.jy)) $('#jY').value = j.jy;
+  $('#jM').value = j.jm;
+  fillDayOptions(j.jy, j.jm, j.jd);
+  $('#fDate').value = iso;
+}
+function jalaliSelectsToISO(){
+  const jy = +$('#jY').value, jm = +$('#jM').value, jd = +$('#jD').value;
+  return jToISO(jy, jm, jd);
+}
+function onJalaliChange(){
+  const jy = +$('#jY').value, jm = +$('#jM').value;
+  fillDayOptions(jy, jm, $('#jD').value);
+  $('#fDate').value = jalaliSelectsToISO();
+}
+
+function renderCalendar(){
+  const jy = calYear, jm = calMonth;
+  const firstISO = jToISO(jy, jm, 1);
+  const startCol = (new Date(firstISO + 'T00:00:00').getDay() + 1) % 7;
+  const len = jMonthLen(jy, jm);
+  const today = todayISO();
+
+  let cells = J_WEEK.map(w => `<div class="cal-wd">${w}</div>`).join('');
+  for (let i = 0; i < startCol; i++) cells += '<div class="cal-cell blank"></div>';
+
+  let mIn = 0, mOut = 0, mCount = 0;
+
+  for (let d = 1; d <= len; d++){
+    const iso = jToISO(jy, jm, d);
+    const day = data.days[iso];
+    const pT = day ? sum(day.passengers) : 0;
+    const eT = day ? sum(day.expenses) : 0;
+    const hasIn = day && day.passengers.length > 0;
+    const hasOut = day && day.expenses.length > 0;
+    if (day){ mIn += pT; mOut += eT; mCount++; }
+
+    const cls = ['cal-cell', iso === currentDate ? 'sel' : '', iso === today ? 'today' : '',
+                 (hasIn || hasOut) ? 'has' : ''].filter(Boolean).join(' ');
+    const title = hasIn || hasOut
+      ? `دریافتی: ${fmt(pT)} — خرج: ${fmt(eT)}`
+      : 'بدون ورودی';
+
+    cells += `<button type="button" class="${cls}" data-iso="${iso}" title="${esc(title)}">
+      <span class="cal-num">${toFa(d)}</span>
+      <span class="cal-dots">
+        ${hasIn ? '<i class="dot g"></i>' : ''}
+        ${hasOut ? '<i class="dot r"></i>' : ''}
+      </span>
+    </button>`;
+  }
+
+  const greg = toGregorian(jy, jm, 15);
+  const gregLabel = new Date(toISO(greg.gy, greg.gm, greg.gd) + 'T00:00:00')
+    .toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+  $('#calendarCard').innerHTML = `
+    <div class="cal-head">
+      <div class="cal-title">${J_MONTHS[jm - 1]} ${toFa(jy)}
+        <small>${gregLabel} · ${toFa(mCount)} روز دارای ورودی</small>
+      </div>
+      <div class="cal-nav">
+        <button type="button" data-cal="prev" title="ماه قبل">›</button>
+        <button type="button" data-cal="today" title="برو به امروز">◉</button>
+        <button type="button" data-cal="next" title="ماه بعد">‹</button>
+      </div>
+    </div>
+    <div class="cal-grid">${cells}</div>
+    <div class="cal-legend">
+      <span><i class="dot g"></i>دریافتی</span>
+      <span><i class="dot r"></i>خرج</span>
+      <span>◉ امروز</span>
+    </div>
+    <div class="cal-month-sum">
+      <span>دریافتی ماه: <b class="green">${fmt(mIn)}</b></span>
+      <span>خرج ماه: <b class="red">${fmt(mOut)}</b></span>
+      <span>مانده ماه: <b>${fmt(mIn - mOut)}</b></span>
+    </div>`;
+}
+
+function renderDayList(){
+  const list = $('#dayList');
+  const dates = Object.keys(data.days).sort().reverse();
+  if (!dates.length){
+    list.innerHTML = '<p class="empty small">هنوز روزی ثبت نشده است</p>';
+    return;
+  }
+  list.innerHTML = dates.map(d => {
+    const day = data.days[d];
+    const pT = sum(day.passengers), eT = sum(day.expenses);
+    return `<button class="day-item ${d === currentDate ? 'active' : ''}" data-date="${d}">
+      <div class="di-date">${faShort(d)}</div>
+      <div class="di-sub"><span class="green">${fmt(pT)}</span><span class="red">${fmt(eT)}</span></div>
+    </button>`;
+  }).join('');
+}
+
+function renderGrand(){
+  let p = 0, e = 0, km = 0;
+  Object.values(data.days).forEach(d => {
+    p += sum(d.passengers);
+    e += sum(d.expenses);
+    km += d.passengers.reduce((s, x) => s + Number(x.distance || 0), 0);
+  });
+  $('#grand').innerHTML = `
+    <div class="g-row"><span>جمع کل دریافتی</span><b class="green">${fmt(p)}</b></div>
+    <div class="g-row"><span>جمع کل خرج</span><b class="red">${fmt(e)}</b></div>
+    <div class="g-row"><span>کل مسافت</span><b>${toFa(km.toFixed(1))} کیلومتر</b></div>
+    <div class="g-row total"><span>مانده کل</span><b>${fmt(p - e)}</b></div>`;
+}
+
+function renderDay(){
+  const card = $('#dayCard');
+  const day = data.days[currentDate];
+  const ps = day ? [...day.passengers].sort((a, b) => (a.time || '').localeCompare(b.time || '')) : [];
+  const es = day ? [...day.expenses].sort((a, b) => (a.time || '').localeCompare(b.time || '')) : [];
+  const pT = sum(ps), eT = sum(es);
+  const kmT = ps.reduce((s, p) => s + Number(p.distance || 0), 0);
+
+  const pRows = ps.map((p, i) => {
+    const from = p.from && p.from.label ? p.from.label : '—';
+    const to   = p.to && p.to.label ? p.to.label : '—';
+    return `<tr>
+      <td class="idx">${toFa(i + 1)}</td>
+      <td>${esc(p.name)}</td>
+      <td class="num">${toFa(p.time || '-')}</td>
+      <td class="route">
+        <div class="rline"><span>${esc(shortLabel(from, 22))}</span><span class="rar">←</span><span>${esc(shortLabel(to, 22))}</span></div>
+        ${p.distance ? `<div class="rdist">${toFa(Number(p.distance).toFixed(1))} کیلومتر</div>` : ''}
+      </td>
+      <td class="num">${fmt(p.amount)}</td>
+      <td class="muted">${esc(p.note || '')}</td>
+      <td class="actions">
+        <button class="icon-btn" data-act="edit" data-kind="p" data-id="${p.id}" title="ویرایش">✎</button>
+        <button class="icon-btn danger" data-act="del" data-kind="p" data-id="${p.id}" title="حذف">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const eRows = es.map((x, i) => `
+    <tr>
+      <td class="idx">${toFa(i + 1)}</td>
+      <td>${esc(x.name)}</td>
+      <td class="num">${toFa(x.time || '-')}</td>
+      <td class="num">${fmt(x.amount)}</td>
+      <td class="muted">${esc(x.note || '')}</td>
+      <td class="actions">
+        <button class="icon-btn" data-act="edit" data-kind="e" data-id="${x.id}" title="ویرایش">✎</button>
+        <button class="icon-btn danger" data-act="del" data-kind="e" data-id="${x.id}" title="حذف">✕</button>
+      </td>
+    </tr>`).join('');
+
+  card.innerHTML = `
+    <div class="day-head">
+      <div class="dh-title">
+        <h2>${faFull(currentDate)}</h2>
+        <div class="muted">${faGreg(currentDate)} میلادی · ${toFa(ps.length)} مسافر · ${toFa(es.length)} خرج</div>
+        ${day ? `<button class="btn ghost small" data-act="delday">حذف کل این روز</button>` : ''}
+      </div>
+      <div class="stats">
+        <div class="stat in"><span>دریافتی روز</span><b>${fmt(pT)}</b></div>
+        <div class="stat out"><span>خرج روز</span><b>${fmt(eT)}</b></div>
+        <div class="stat"><span>مسافت</span><b>${toFa(kmT.toFixed(1))} km</b></div>
+        <div class="stat"><span>مانده</span><b>${fmt(pT - eT)}</b></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3 class="sec-title">🚕 مسافران این روز</h3>
+      ${ps.length ? `
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>#</th><th>نام مسافر</th><th>ساعت</th><th>مسیر / طول</th><th>مبلغ دریافتی</th><th>توضیح</th><th></th></tr></thead>
+            <tbody>${pRows}</tbody>
+            <tfoot><tr><td colspan="4">مجموع دریافتی این روز</td><td class="num green">${fmt(pT)}</td><td colspan="2"></td></tr></tfoot>
+          </table>
+        </div>` : `<p class="empty">برای این روز مسافری ثبت نشده است.</p>`}
+    </div>
+
+    <div class="section">
+      <h3 class="sec-title">💸 خرج‌های این روز</h3>
+      ${es.length ? `
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>#</th><th>عنوان خرج</th><th>ساعت</th><th>مبلغ</th><th>توضیح</th><th></th></tr></thead>
+            <tbody>${eRows}</tbody>
+            <tfoot><tr><td colspan="3">مجموع خرج این روز</td><td class="num red">${fmt(eT)}</td><td colspan="2"></td></tr></tfoot>
+          </table>
+        </div>` : `<p class="empty">خرجی برای این روز ثبت نشده است.</p>`}
+    </div>
+
+    <div class="day-summary">
+      <div><span>مجموع دریافتی روز</span><b class="green">${fmt(pT)} تومان</b></div>
+      <div><span>مجموع خرج روز</span><b class="red">${fmt(eT)} تومان</b></div>
+      <div><span>مسافت طی‌شده</span><b>${toFa(kmT.toFixed(1))} کیلومتر</b></div>
+      <div><span>مانده روز</span><b>${fmt(pT - eT)} تومان</b></div>
+    </div>`;
+}
+
+function renderAll(){
+  renderDayList();
+  renderCalendar();
+  renderDay();
+  renderGrand();
+}
+
+function setCurrentDate(iso){
+  currentDate = iso;
+  const j = isoToJ(iso);
+  calYear = j.jy; calMonth = j.jm;
+  setFormDate(iso);
+  renderAll();
+}
+
+$('#dayList').addEventListener('click', e => {
+  const btn = e.target.closest('.day-item');
+  if (!btn) return;
+  setCurrentDate(btn.dataset.date);
+});
+
+$('#calendarCard').addEventListener('click', e => {
+  const nav = e.target.closest('button[data-cal]');
+  if (nav){
+    if (nav.dataset.cal === 'prev'){
+      calMonth--; if (calMonth < 1){ calMonth = 12; calYear--; }
+    } else if (nav.dataset.cal === 'next'){
+      calMonth++; if (calMonth > 12){ calMonth = 1; calYear++; }
+    } else {
+      const t = todayISO(); const j = isoToJ(t);
+      calYear = j.jy; calMonth = j.jm;
+      currentDate = t; setFormDate(t);
+    }
+    renderAll();
+    return;
+  }
+  const cell = e.target.closest('.cal-cell[data-iso]');
+  if (cell) setCurrentDate(cell.dataset.iso);
+});
+
+$('#btnToday').addEventListener('click', () => {
+  setCurrentDate(todayISO());
+  $('#fTime').value = nowTime();
+});
+
+document.querySelectorAll('.seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    formType = btn.dataset.type;
+    document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b === btn));
+    const isP = formType === 'p';
+    $('#lblName').textContent = isP ? 'نام مسافر' : 'عنوان خرج';
+    $('#fName').placeholder   = isP ? 'مثلا: علی رضایی' : 'مثلا: بنزین';
+    $('#submitBtn').textContent = isP ? 'ثبت مسافر' : 'ثبت خرج';
+    document.querySelectorAll('.trip-field').forEach(el => el.hidden = !isP);
+  });
+});
+
+$('#btnFrom').addEventListener('click', () => captureLocation('from'));
+$('#btnTo').addEventListener('click', () => captureLocation('to'));
+$('#btnDist').addEventListener('click', async () => {
+  await updateDistance();
+});
+
+// وقتی کاربر شروع به تایپ در فیلد مبدا یا مقصد می‌کند، مختصات قبلی (GPS) پاک می‌شود تا با متن جدید جستجو شود
+$('#fFrom').addEventListener('input', () => { tripFrom = null; });
+$('#fTo').addEventListener('input', () => { tripTo = null; });
+
+let originAutoTried = false;
+$('#fName').addEventListener('focus', () => {
+  if (originAutoTried || formType !== 'p') return;
+  if ($('#fFrom').value.trim()) return;
+  originAutoTried = true;
+  captureLocation('from', true);
+});
+
+$('#entryForm').addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const name   = $('#fName').value.trim();
+  const amount = parseAmount($('#fAmount').value);
+  const date   = $('#fDate').value || jalaliSelectsToISO();
+  const time   = $('#fTime').value;
+  const note   = $('#fNote').value.trim();
+
+  if (!name || !(amount > 0) || !date || !time){
+    alert('لطفا نام، مبلغ، تاریخ و ساعت را کامل وارد کنید.');
+    return;
+  }
+
+  const submitBtn = $('#submitBtn');
+  submitBtn.disabled = true;
+
+  let extra = {};
+  if (formType === 'p'){
+    // اگر متن وارد شده ولی مختصات نداریم، قبل از ثبت یکبار تلاش میکنیم مختصات را بگیریم
+    if (!tripFrom && $('#fFrom').value.trim()) {
+      const c = await geocodeAddress($('#fFrom').value.trim());
+      if (c) tripFrom = c;
+    }
+    if (!tripTo && $('#fTo').value.trim()) {
+      const c = await geocodeAddress($('#fTo').value.trim());
+      if (c) tripTo = c;
+    }
+
+    const fromLabel = tripFrom ? tripFrom.label : ($('#fFrom').value.trim() || '');
+    const toLabel   = tripTo   ? tripTo.label   : ($('#fTo').value.trim() || '');
+    const dist      = Number($('#fDist').value) || 0;
+
+    extra = {
+      from: fromLabel ? { label: fromLabel, lat: tripFrom ? tripFrom.lat : null, lng: tripFrom ? tripFrom.lng : null } : null,
+      to:   toLabel   ? { label: toLabel,   lat: tripTo   ? tripTo.lat   : null, lng: tripTo   ? tripTo.lng   : null } : null,
+      distance: dist
+    };
+  }
+
+  const day = dayOf(date, true);
+  const item = { id: uid(), name, amount, time, note, created: Date.now(), ...extra };
+  (formType === 'p' ? day.passengers : day.expenses).push(item);
+
+  save();
+  setCurrentDate(date);
+  setGeoStatus('');
+
+  $('#fName').value = '';
+  $('#fAmount').value = '';
+  $('#fNote').value = '';
+  $('#fFrom').value = '';
+  $('#fTo').value = '';
+  $('#fDist').value = '';
+  tripFrom = null; tripTo = null;
+  originAutoTried = false;
+  $('#fTime').value = nowTime();
+  submitBtn.disabled = false;
+  $('#fName').focus();
+});
+
+$('#dayCard').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-act]');
+  if (!btn) return;
+  const act = btn.dataset.act;
+
+  if (act === 'edit'){
+    openModal(btn.dataset.kind, currentDate, btn.dataset.id);
+  }
+  else if (act === 'del'){
+    if (confirm('این مورد حذف شود؟')){
+      const day = data.days[currentDate];
+      if (!day) return;
+      const key = btn.dataset.kind === 'p' ? 'passengers' : 'expenses';
+      day[key] = day[key].filter(x => x.id !== btn.dataset.id);
+      cleanupDay(currentDate);
+      save(); renderAll();
+    }
+  }
+  else if (act === 'delday'){
+    if (confirm('تمام اطلاعات این روز حذف شود؟')){
+      delete data.days[currentDate];
+      save(); renderAll();
+    }
+  }
+});
+
+function openModal(kind, date, id){
+  const day = data.days[date];
+  if (!day) return;
+  const list = kind === 'p' ? day.passengers : day.expenses;
+  const item = list.find(x => x.id === id);
+  if (!item) return;
+
+  editing = { kind, date, id };
+  $('#modalTitle').textContent = kind === 'p' ? 'ویرایش مسافر' : 'ویرایش خرج';
+
+  const tripHtml = kind === 'p' ? `
+    <label>مبدا
+      <input id="mFrom" value="${esc(item.from ? item.from.label : '')}">
+    </label>
+    <label>مقصد
+      <input id="mTo" value="${esc(item.to ? item.to.label : '')}">
+    </label>
+    <label>طول مسیر (کیلومتر)
+      <input id="mDist" inputmode="decimal" value="${item.distance ? item.distance : ''}">
+    </label>` : '';
+
+  $('#modalBody').innerHTML = `
+    <label>${kind === 'p' ? 'نام مسافر' : 'عنوان خرج'}
+      <input id="mName" value="${esc(item.name)}">
+    </label>
+    <label>مبلغ (تومان)
+      <input id="mAmount" inputmode="numeric" value="${Number(item.amount).toLocaleString('en-US')}">
+    </label>
+    <label>تاریخ
+      <input id="mDate" type="date" value="${date}">
+    </label>
+    <label>ساعت
+      <input id="mTime" type="time" value="${item.time || nowTime()}">
+    </label>
+    ${tripHtml}
+    <label>توضیح
+      <input id="mNote" value="${esc(item.note || '')}">
+    </label>`;
+
+  bindAmount($('#mAmount'));
+  $('#modal').classList.remove('hidden');
+  $('#mName').focus();
+}
+
+function closeModal(){
+  $('#modal').classList.add('hidden');
+  editing = null;
+}
+
+$('#modalCancel').addEventListener('click', closeModal);
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+
+$('#modalSave').addEventListener('click', () => {
+  if (!editing) return;
+  const name    = $('#mName').value.trim();
+  const amount  = parseAmount($('#mAmount').value);
+  const time    = $('#mTime').value;
+  const note    = $('#mNote').value.trim();
+  const newDate = $('#mDate').value;
+
+  if (!name || !(amount > 0) || !time || !newDate){
+    alert('اطلاعات را کامل وارد کنید.');
+    return;
+  }
+
+  const key = editing.kind === 'p' ? 'passengers' : 'expenses';
+  const day = data.days[editing.date];
+  if (!day) { closeModal(); return; }
+
+  const item = day[key].find(x => x.id === editing.id);
+  if (!item) { closeModal(); return; }
+
+  item.name = name;
+  item.amount = amount;
+  item.time = time;
+  item.note = note;
+
+  if (editing.kind === 'p'){
+    const mFrom = $('#mFrom') ? $('#mFrom').value.trim() : '';
+    const mTo   = $('#mTo')   ? $('#mTo').value.trim()   : '';
+    const mDist = $('#mDist') ? Number($('#mDist').value) : 0;
+    item.from = mFrom ? { label: mFrom, lat: item.from ? item.from.lat : null, lng: item.from ? item.from.lng : null } : null;
+    item.to   = mTo   ? { label: mTo,   lat: item.to   ? item.to.lat   : null, lng: item.to   ? item.to.lng   : null } : null;
+    item.distance = mDist || 0;
+  }
+
+  if (newDate !== editing.date){
+    day[key] = day[key].filter(x => x.id !== editing.id);
+    dayOf(newDate, true)[key].push(item);
+    cleanupDay(editing.date);
+  }
+
+  save();
+  closeModal();
+  renderAll();
+});
+
+$('#btnExport').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `backup-${todayISO()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+
+$('#btnImport').addEventListener('click', () => $('#fileImport').click());
+$('#fileImport').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const d = JSON.parse(reader.result);
+      if (!d || typeof d !== 'object' || !d.days) throw new Error('bad');
+      if (!confirm('اطلاعات فعلی با فایل پشتیبان جایگزین شود؟')) return;
+      data = d;
+      if (!data.settings) data.settings = { autoDest: true, useRouting: true };
+      save();
+      renderAll();
+      alert('بازیابی انجام شد ✓');
+    } catch (err) {
+      alert('فایل پشتیبان معتبر نیست.');
+    }
+  };
+  reader.readAsText(f);
+  e.target.value = '';
+});
+
+load();
+initDateSelects();
+
+const todayJ = isoToJ(todayISO());
+calYear = todayJ.jy;
+calMonth = todayJ.jm;
+currentDate = todayISO();
+
+bindAmount($('#fAmount'));
+setFormDate(currentDate);
+$('#fTime').value = nowTime();
+renderAll();
+
+$('#jY').addEventListener('change', onJalaliChange);
+$('#jM').addEventListener('change', onJalaliChange);
+$('#jD').addEventListener('change', () => { $('#fDate').value = jalaliSelectsToISO(); });
+$('#fDate').addEventListener('change', () => {
+  const v = $('#fDate').value;
+  if (v) setFormDate(v);
+});
+
+setInterval(() => {
+  if (!$('#fTime').value) $('#fTime').value = nowTime();
+}, 60000);
+</script>
+</body>
+</html>
